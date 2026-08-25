@@ -1,0 +1,120 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:VideoConverter.ViewModels"
+        x:Class="VideoConverter.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="影片壓縮轉檔工具" Width="650" Height="480"
+        WindowStartupLocation="CenterScreen">
+
+    <TabControl Margin="10">
+        <!-- 分頁 1：轉檔主頁 -->
+        <TabItem Header="轉檔主頁">
+            <StackPanel Margin="15" Spacing="12">
+                <TextBlock Text="影音轉檔與動態壓縮" FontSize="18" FontWeight="Bold"/>
+
+                <!-- 來源檔案選擇 -->
+                <TextBlock Text="來源檔案：" FontWeight="Bold"/>
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBox Grid.Column="0" Text="{Binding InputFilePath}" Watermark="請選擇影片檔案..."/>
+                    <Button Grid.Column="1" Content="瀏覽..." Click="OnBrowseClick" Margin="10,0,0,0" IsEnabled="{Binding !IsConverting}"/>
+                </Grid>
+
+                <!-- 輸出位置選擇 -->
+                <TextBlock Text="輸出位置：" FontWeight="Bold"/>
+                <Grid ColumnDefinitions="*, Auto">
+                    <TextBox Grid.Column="0" Text="{Binding OutputFolderPath}" Watermark="預設與來源檔案相同資料夾"/>
+                    <Button Grid.Column="1" Content="選擇資料夾..." Click="OnBrowseFolderClick" Margin="10,0,0,0" IsEnabled="{Binding !IsConverting}"/>
+                </Grid>
+
+                <!-- 編碼器選擇 -->
+                <Grid ColumnDefinitions="Auto, *">
+                    <TextBlock Grid.Column="0" Text="編碼器 (Codec):" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <ComboBox Grid.Column="1" SelectedIndex="{Binding SelectedCodecIndex}" HorizontalAlignment="Stretch" IsEnabled="{Binding !IsConverting}">
+                        <ComboBoxItem>H.264 (預設 / 相容性最佳)</ComboBoxItem>
+                        <ComboBoxItem>H.265 / HEVC (高壓縮率)</ComboBoxItem>
+                        <ComboBoxItem>AV1 (次世代極高壓縮率)</ComboBoxItem>
+                        <ComboBoxItem>自動判斷 (大檔案自動切換 H.265)</ComboBoxItem>
+                    </ComboBox>
+                </Grid>
+
+                <!-- 自動判斷門檻設定 -->
+                <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsAutoModeSelected}">
+                    <TextBlock Text="自動切換門檻 (GB):" VerticalAlignment="Center"/>
+                    <NumericUpDown Value="{Binding AutoThresholdGb}" Minimum="0.5" Maximum="50" Increment="0.5" FormatString="{}{0:N1} GB" Width="130" IsEnabled="{Binding !IsConverting}"/>
+                    <TextBlock Text="超過此大小自動改用 H.265" VerticalAlignment="Center" Foreground="Gray" FontSize="12"/>
+                </StackPanel>
+
+                <!-- CRF 品質調整 -->
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="壓縮品質 (CRF):" VerticalAlignment="Center"/>
+                    <Slider Width="200" Minimum="18" Maximum="32" Value="{Binding CrfValue}" IsSnapToTickEnabled="True" TickFrequency="1" IsEnabled="{Binding !IsConverting}"/>
+                    <TextBlock Text="{Binding CrfValue}" VerticalAlignment="Center" FontWeight="Bold"/>
+                    <TextBlock Text="(數值越大體積越小)" VerticalAlignment="Center" Foreground="Gray" FontSize="12"/>
+                </StackPanel>
+
+                <!-- 按鈕區域：平時顯示「開始轉換」，轉檔中顯示「取消轉換」 -->
+                <Grid>
+                    <!-- 開始按鈕：只有在非轉檔狀態下顯示 -->
+                    <Button Content="開始轉換為 MP4" Command="{Binding StartConversionCommand}" 
+                            IsVisible="{Binding !IsConverting}"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Height="40" Background="#007ACC" Foreground="White" FontWeight="Bold"/>
+
+                    <!-- 取消按鈕：只有在轉檔狀態下才顯示 -->
+                    <Button Content="取消轉檔" Command="{Binding CancelConversionCommand}" 
+                            IsVisible="{Binding IsConverting}"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Height="40" Background="#D9534F" Foreground="White" FontWeight="Bold"/>
+                </Grid>
+
+                <!-- 進度條與狀態欄 -->
+                <ProgressBar Value="{Binding ProgressValue}" Maximum="100" Height="20" ShowProgressText="True"/>
+                <TextBlock Text="{Binding StatusMessage}" HorizontalAlignment="Center" Foreground="Gray" TextWrapping="Wrap"/>
+            </StackPanel>
+        </TabItem>
+
+        <!-- 分頁 2：進階設定頁面 -->
+        <TabItem Header="進階設定">
+            <ScrollViewer>
+                <StackPanel Margin="15" Spacing="15">
+                    <TextBlock Text="輸出檔名與 FFmpeg 效能設定" FontSize="18" FontWeight="Bold"/>
+
+                    <!-- 檔名標籤設定 -->
+                    <StackPanel Spacing="8">
+                        <CheckBox IsChecked="{Binding EnableFileNameSuffix}" Content="轉檔後輸出檔名加上自訂標籤 (FLAG)" FontWeight="Bold" IsEnabled="{Binding !IsConverting}"/>
+                        <Grid ColumnDefinitions="Auto, *" IsVisible="{Binding EnableFileNameSuffix}" Margin="25,0,0,0">
+                            <TextBlock Grid.Column="0" Text="標籤文字：" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBox Grid.Column="1" Text="{Binding FileNameSuffixText}" Watermark="例如 _compressed 或 _conv" IsEnabled="{Binding !IsConverting}"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <Separator Height="1" Background="#E0E0E0"/>
+
+                    <!-- 編碼速度 (Preset) -->
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="編碼速度 Preset (影響 CPU 占用與壓縮比):" FontWeight="Bold"/>
+                        <ComboBox SelectedIndex="{Binding SelectedPresetIndex}" HorizontalAlignment="Stretch" IsEnabled="{Binding !IsConverting}">
+                            <ComboBoxItem>ultrafast (最快，檔案較大)</ComboBoxItem>
+                            <ComboBoxItem>fast (快速)</ComboBoxItem>
+                            <ComboBoxItem>medium (平衡，預設首選)</ComboBoxItem>
+                            <ComboBoxItem>slow (慢速，壓縮率較佳)</ComboBoxItem>
+                            <ComboBoxItem>veryslow (極慢，最佳檔案體積)</ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <Separator Height="1" Background="#E0E0E0"/>
+
+                    <!-- 音訊設定 -->
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="音訊編碼速率 (Audio Bitrate):" FontWeight="Bold"/>
+                        <ComboBox SelectedIndex="{Binding SelectedAudioBitrateIndex}" HorizontalAlignment="Stretch" IsEnabled="{Binding !IsConverting}">
+                            <ComboBoxItem>128 kbps (標準品質)</ComboBoxItem>
+                            <ComboBoxItem>192 kbps (高品質，預設)</ComboBoxItem>
+                            <ComboBoxItem>320 kbps (極高音質)</ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+    </TabControl>
+</Window>
