@@ -12,17 +12,16 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    // 視窗關閉時觸發
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         if (DataContext is MainWindowViewModel vm)
         {
-            // 強制取消正在執行的 FFmpeg 進程
-            vm.CancelConversion();
+            vm.CancelAllConversions();
         }
         base.OnClosing(e);
     }
 
+    // 選擇多個檔案
     private async void OnBrowseClick(object? sender, RoutedEventArgs e)
     {
         var topLevel = TopLevel.GetTopLevel(this);
@@ -30,11 +29,11 @@ public partial class MainWindow : Window
 
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new Avalonia.Platform.Storage.FilePickerOpenOptions
         {
-            Title = "選擇要轉檔的影片或音訊檔",
-            AllowMultiple = false,
+            Title = "選擇要轉檔的影片或音訊檔 (可複選)",
+            AllowMultiple = true, // 允許複選檔案
             FileTypeFilter = new[]
             {
-                new Avalonia.Platform.Storage.FilePickerFileType("支援的影音檔案")
+                new Avalonia.Platform.Storage.FilePickerFileType("影音檔案")
                 {
                     Patterns = new[] { "*.avi", "*.3gp", "*.flv", "*.wmv", "*.webm", "*.mov", "*.mp3", "*.mkv", "*.mp4" }
                 },
@@ -47,10 +46,14 @@ public partial class MainWindow : Window
 
         if (files.Count > 0 && DataContext is MainWindowViewModel vm)
         {
-            vm.InputFilePath = files[0].Path.LocalPath;
+            foreach (var file in files)
+            {
+                vm.AddFileToQueue(file.Path.LocalPath);
+            }
         }
     }
 
+    // 選擇輸出資料夾
     private async void OnBrowseFolderClick(object? sender, RoutedEventArgs e)
     {
         var topLevel = TopLevel.GetTopLevel(this);

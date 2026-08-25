@@ -1,91 +1,117 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:VideoConverter.ViewModels"
+        xmlns:m="using:VideoConverter.Models"
         x:Class="VideoConverter.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="影片壓縮轉檔工具" Width="650" Height="480"
+        Title="影片壓縮轉檔工具" Width="750" Height="560"
         WindowStartupLocation="CenterScreen">
 
     <TabControl Margin="10">
-        <!-- 分頁 1：轉檔主頁 -->
+        <!-- 分頁 1：批量轉檔主頁 -->
         <TabItem Header="轉檔主頁">
-            <StackPanel Margin="15" Spacing="12">
-                <TextBlock Text="影音轉檔與動態壓縮" FontSize="18" FontWeight="Bold"/>
-
-                <!-- 來源檔案選擇 -->
-                <TextBlock Text="來源檔案：" FontWeight="Bold"/>
-                <Grid ColumnDefinitions="*, Auto">
-                    <TextBox Grid.Column="0" Text="{Binding InputFilePath}" Watermark="請選擇影片檔案..."/>
-                    <Button Grid.Column="1" Content="瀏覽..." Click="OnBrowseClick" Margin="10,0,0,0" IsEnabled="{Binding !IsConverting}"/>
+            <Grid RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="10">
+                
+                <!-- 標題與批量按鈕列 -->
+                <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto" Margin="0,0,0,10">
+                    <TextBlock Grid.Column="0" Text="影音轉檔佇列" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="新增檔案..." Click="OnBrowseClick" Margin="0,0,10,0"/>
+                    <Button Grid.Column="2" Content="清空列表" Command="{Binding ClearQueueCommand}" IsEnabled="{Binding !IsConverting}"/>
                 </Grid>
 
-                <!-- 輸出位置選擇 -->
-                <TextBlock Text="輸出位置：" FontWeight="Bold"/>
-                <Grid ColumnDefinitions="*, Auto">
-                    <TextBox Grid.Column="0" Text="{Binding OutputFolderPath}" Watermark="預設與來源檔案相同資料夾"/>
-                    <Button Grid.Column="1" Content="選擇資料夾..." Click="OnBrowseFolderClick" Margin="10,0,0,0" IsEnabled="{Binding !IsConverting}"/>
+                <!-- 輸出位置與並行數設定 -->
+                <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,10">
+                    <TextBlock Grid.Column="0" Text="輸出資料夾：" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,0"/>
+                    <TextBox Grid.Column="1" Text="{Binding OutputFolderPath}" Watermark="預設與來源檔案相同資料夾"/>
+                    <Button Grid.Column="2" Content="選擇資料夾..." Click="OnBrowseFolderClick" Margin="10,0,0,0"/>
                 </Grid>
 
-                <!-- 編碼器選擇 -->
-                <Grid ColumnDefinitions="Auto, *">
-                    <TextBlock Grid.Column="0" Text="編碼器 (Codec):" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <!-- 轉換參數快速設定 -->
+                <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto, Auto" Margin="0,0,0,10">
+                    <TextBlock Grid.Column="0" Text="編碼器 (Codec):" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,0"/>
                     <ComboBox Grid.Column="1" SelectedIndex="{Binding SelectedCodecIndex}" HorizontalAlignment="Stretch" IsEnabled="{Binding !IsConverting}">
                         <ComboBoxItem>H.264 (預設 / 相容性最佳)</ComboBoxItem>
                         <ComboBoxItem>H.265 / HEVC (高壓縮率)</ComboBoxItem>
                         <ComboBoxItem>AV1 (次世代極高壓縮率)</ComboBoxItem>
                         <ComboBoxItem>自動判斷 (大檔案自動切換 H.265)</ComboBoxItem>
                     </ComboBox>
+                    
+                    <TextBlock Grid.Column="2" Text="同時轉檔任務數:" VerticalAlignment="Center" FontWeight="Bold" Margin="10,0,10,0"/>
+                    <NumericUpDown Grid.Column="3" Value="{Binding MaxConcurrentTasks}" Minimum="1" Maximum="8" Increment="1" Width="100" IsEnabled="{Binding !IsConverting}"/>
                 </Grid>
 
-                <!-- 自動判斷門檻設定 -->
-                <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsAutoModeSelected}">
-                    <TextBlock Text="自動切換門檻 (GB):" VerticalAlignment="Center"/>
-                    <NumericUpDown Value="{Binding AutoThresholdGb}" Minimum="0.5" Maximum="50" Increment="0.5" FormatString="{}{0:N1} GB" Width="130" IsEnabled="{Binding !IsConverting}"/>
-                    <TextBlock Text="超過此大小自動改用 H.265" VerticalAlignment="Center" Foreground="Gray" FontSize="12"/>
-                </StackPanel>
+                <!-- 批量佇列清單列表 -->
+                <Border Grid.Row="3" BorderBrush="#CCCCCC" BorderThickness="1" CornerRadius="4" Background="#FAFAFA" Margin="0,0,0,10">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding ConversionQueue}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="m:ConversionItem">
+                                    <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="10" Background="White">
+                                        <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="*, Auto">
+                                            <!-- 檔名與狀態 -->
+                                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,5">
+                                                <TextBlock Text="{Binding FileName}" FontWeight="Bold" FontSize="14"/>
+                                                <TextBlock Text="{Binding StatusMessage}" Foreground="Gray" FontSize="12" VerticalAlignment="Center"/>
+                                            </StackPanel>
 
-                <!-- CRF 品質調整 -->
-                <StackPanel Orientation="Horizontal" Spacing="10">
-                    <TextBlock Text="壓縮品質 (CRF):" VerticalAlignment="Center"/>
-                    <Slider Width="200" Minimum="18" Maximum="32" Value="{Binding CrfValue}" IsSnapToTickEnabled="True" TickFrequency="1" IsEnabled="{Binding !IsConverting}"/>
-                    <TextBlock Text="{Binding CrfValue}" VerticalAlignment="Center" FontWeight="Bold"/>
-                    <TextBlock Text="(數值越大體積越小)" VerticalAlignment="Center" Foreground="Gray" FontSize="12"/>
-                </StackPanel>
+                                            <!-- 移除按鈕 -->
+                                            <Button Grid.Row="0" Grid.Column="1" Content="❌" 
+                                                    Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).RemoveItemCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    Padding="4,2" FontSize="10"/>
 
-                <!-- 按鈕區域：平時顯示「開始轉換」，轉檔中顯示「取消轉換」 -->
-                <Grid>
-                    <!-- 開始按鈕：只有在非轉檔狀態下顯示 -->
-                    <Button Content="開始轉換為 MP4" Command="{Binding StartConversionCommand}" 
-                            IsVisible="{Binding !IsConverting}"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            Height="40" Background="#007ACC" Foreground="White" FontWeight="Bold"/>
+                                            <!-- 獨立進度條 -->
+                                            <ProgressBar Grid.Row="1" Grid.ColumnSpan="2" Value="{Binding ProgressValue}" Maximum="100" Height="12" ShowProgressText="True"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
 
-                    <!-- 取消按鈕：只有在轉檔狀態下才顯示 -->
-                    <Button Content="取消轉檔" Command="{Binding CancelConversionCommand}" 
-                            IsVisible="{Binding IsConverting}"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                            Height="40" Background="#D9534F" Foreground="White" FontWeight="Bold"/>
+                <!-- 控制按鈕與總進度區 -->
+                <Grid Grid.Row="4" ColumnDefinitions="*, Auto">
+                    <TextBlock Grid.Column="0" Text="{Binding GlobalStatusMessage}" VerticalAlignment="Center" Foreground="Gray" TextWrapping="Wrap"/>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                        <Button Content="開始轉檔" Command="{Binding StartQueueCommand}" 
+                                IsVisible="{Binding !IsConverting}"
+                                Height="38" Padding="20,0" Background="#007ACC" Foreground="White" FontWeight="Bold"/>
+
+                        <Button Content="停止轉檔" Command="{Binding CancelConversionCommand}" 
+                                IsVisible="{Binding IsConverting}"
+                                Height="38" Padding="20,0" Background="#D9534F" Foreground="White" FontWeight="Bold"/>
+                    </StackPanel>
                 </Grid>
-
-                <!-- 進度條與狀態欄 -->
-                <ProgressBar Value="{Binding ProgressValue}" Maximum="100" Height="20" ShowProgressText="True"/>
-                <TextBlock Text="{Binding StatusMessage}" HorizontalAlignment="Center" Foreground="Gray" TextWrapping="Wrap"/>
-            </StackPanel>
+            </Grid>
         </TabItem>
 
         <!-- 分頁 2：進階設定頁面 -->
         <TabItem Header="進階設定">
             <ScrollViewer>
                 <StackPanel Margin="15" Spacing="15">
-                    <TextBlock Text="輸出檔名與 FFmpeg 效能設定" FontSize="18" FontWeight="Bold"/>
+                    <TextBlock Text="輸出與效能設定" FontSize="18" FontWeight="Bold"/>
 
                     <!-- 檔名標籤設定 -->
                     <StackPanel Spacing="8">
-                        <CheckBox IsChecked="{Binding EnableFileNameSuffix}" Content="轉檔後輸出檔名加上自訂標籤 (FLAG)" FontWeight="Bold" IsEnabled="{Binding !IsConverting}"/>
+                        <CheckBox IsChecked="{Binding EnableFileNameSuffix}" Content="輸出檔名加上自訂標籤 (FLAG)" FontWeight="Bold" IsEnabled="{Binding !IsConverting}"/>
                         <Grid ColumnDefinitions="Auto, *" IsVisible="{Binding EnableFileNameSuffix}" Margin="25,0,0,0">
                             <TextBlock Grid.Column="0" Text="標籤文字：" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <TextBox Grid.Column="1" Text="{Binding FileNameSuffixText}" Watermark="例如 _compressed 或 _conv" IsEnabled="{Binding !IsConverting}"/>
                         </Grid>
+                    </StackPanel>
+
+                    <Separator Height="1" Background="#E0E0E0"/>
+
+                    <!-- CRF 品質調整 -->
+                    <StackPanel Spacing="5">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="預設壓縮品質 (CRF):" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding CrfValue}" FontWeight="Bold" Foreground="#007ACC"/>
+                        </StackPanel>
+                        <Slider Minimum="18" Maximum="32" Value="{Binding CrfValue}" IsSnapToTickEnabled="True" TickFrequency="1" IsEnabled="{Binding !IsConverting}"/>
+                        <TextBlock Text="(數值越大體積越小，H.264建議23，H.265建議28)" Foreground="Gray" FontSize="12"/>
                     </StackPanel>
 
                     <Separator Height="1" Background="#E0E0E0"/>
