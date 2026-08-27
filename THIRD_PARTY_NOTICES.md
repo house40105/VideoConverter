@@ -1,6 +1,4 @@
-========================================================================
-Third-Party Software Notices
-========================================================================
+## Third-Party Software Notices  
 
 This application includes and uses FFmpeg (https://ffmpeg.org).
 FFmpeg is a trademark of Fabrice Bellard, originator of the FFmpeg project.
