@@ -22,6 +22,8 @@ public partial class MainWindowViewModel : ViewModelBase
     // 工作佇列集合
     public ObservableCollection<ConversionItem> ConversionQueue { get; } = new();
 
+    [ObservableProperty] private string _appVersionText = "v2.1 (Build 2026.08)";
+
     // 併發任務數控管 (預設 1 個)
     [ObservableProperty] private int _maxConcurrentTasks = 1;
 

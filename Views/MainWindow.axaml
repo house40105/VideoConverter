@@ -4,18 +4,18 @@
         xmlns:m="using:VideoConverter.Models"
         x:Class="VideoConverter.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="影片壓縮轉檔工具" Width="750" Height="560"
+        Title="影片壓縮轉檔工具" Width="750" Height="580"
         WindowStartupLocation="CenterScreen">
 
     <TabControl Margin="10">
-        <!-- 分頁 1：批量轉檔主頁 -->
+        <!-- 分頁 1：批量轉檔主頁 (保持原樣) -->
         <TabItem Header="轉檔主頁">
             <Grid RowDefinitions="Auto, Auto, Auto, *, Auto" Margin="10">
-                
                 <!-- 標題與批量按鈕列 -->
                 <Grid Grid.Row="0" ColumnDefinitions="*, Auto, Auto" Margin="0,0,0,10">
                     <TextBlock Grid.Column="0" Text="影音轉檔佇列" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
-                    <Button Grid.Column="1" Content="新增檔案..." Click="OnBrowseClick" Margin="0,0,10,0"/>
+                    <Button Grid.Column="1" Content="新增檔案" Click="OnBrowseClick" Margin="0,0,10,0"
+                            Background="#007ACC" Foreground="White" FontWeight="Bold"/>
                     <Button Grid.Column="2" Content="清空列表" Command="{Binding ClearQueueCommand}" IsEnabled="{Binding !IsConverting}"/>
                 </Grid>
 
@@ -23,7 +23,7 @@
                 <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,10">
                     <TextBlock Grid.Column="0" Text="輸出資料夾：" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,10,0"/>
                     <TextBox Grid.Column="1" Text="{Binding OutputFolderPath}" Watermark="預設與來源檔案相同資料夾"/>
-                    <Button Grid.Column="2" Content="選擇資料夾..." Click="OnBrowseFolderClick" Margin="10,0,0,0"/>
+                    <Button Grid.Column="2" Content="選擇資料夾" Click="OnBrowseFolderClick" Margin="10,0,0,0"/>
                 </Grid>
 
                 <!-- 轉換參數快速設定 -->
@@ -75,11 +75,11 @@
                     <TextBlock Grid.Column="0" Text="{Binding GlobalStatusMessage}" VerticalAlignment="Center" Foreground="Gray" TextWrapping="Wrap"/>
                     
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                        <Button Content="開始轉檔" Command="{Binding StartQueueCommand}" 
+                        <Button Content="開始全部轉檔" Command="{Binding StartQueueCommand}" 
                                 IsVisible="{Binding !IsConverting}"
                                 Height="38" Padding="20,0" Background="#007ACC" Foreground="White" FontWeight="Bold"/>
 
-                        <Button Content="停止轉檔" Command="{Binding CancelConversionCommand}" 
+                        <Button Content="停止佇列轉檔" Command="{Binding CancelConversionCommand}" 
                                 IsVisible="{Binding IsConverting}"
                                 Height="38" Padding="20,0" Background="#D9534F" Foreground="White" FontWeight="Bold"/>
                     </StackPanel>
@@ -139,6 +139,49 @@
                             <ComboBoxItem>320 kbps (極高音質)</ComboBoxItem>
                         </ComboBox>
                     </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+
+        <!-- 分頁 3：關於與授權 (新增) -->
+        <TabItem Header="關於">
+            <ScrollViewer>
+                <StackPanel Margin="20" Spacing="15">
+                    <!-- 軟體名稱與版本號 -->
+                    <StackPanel Spacing="5">
+                <TextBlock Text="Video Converter Tool" FontSize="20" FontWeight="Bold"/>
+                <TextBlock Text="{Binding AppVersionText}" FontSize="14" Foreground="#007ACC" FontWeight="Bold"/>
+            </StackPanel>
+
+                    <Separator Height="1" Background="#E0E0E0"/>
+
+                    <!-- Apache 2.0 授權聲明 -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Application License" FontSize="16" FontWeight="Bold"/>
+                        <Border Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4" Padding="12">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="This application is licensed under the Apache License, Version 2.0." FontWeight="Bold" TextWrapping="Wrap"/>
+                                <TextBlock Text="You may obtain a copy of the License at: http://www.apache.org/licenses/LICENSE-2.0" TextWrapping="Wrap"/>
+                                <TextBlock Text="Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an &quot;AS IS&quot; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied." Foreground="Gray" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <Separator Height="1" Background="#E0E0E0"/>
+
+                    <!-- 第三方組件與 FFmpeg 授權聲明 -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Third-Party License Notice" FontSize="16" FontWeight="Bold"/>
+                        <Border Background="#F5F5F5" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4" Padding="12">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="• This software utilizes FFmpeg (https://ffmpeg.org), a third-party open-source multimedia framework, as its core conversion engine." TextWrapping="Wrap"/>
+                                <TextBlock Text="• FFmpeg is a trademark of Fabrice Bellard and the FFmpeg development team." TextWrapping="Wrap"/>
+                                <TextBlock Text="• The FFmpeg executable bundled with this package is distributed under the terms of the GNU General Public License v2.0 or later (GPL v2+)." TextWrapping="Wrap"/>
+                                <TextBlock Text="• This application communicates with and invokes FFmpeg as an independent subprocess via command-line arguments (CLI)." TextWrapping="Wrap"/>
+                                <TextBlock Text="• For the full license terms, please refer to LICENSE-THIRD-PARTY.md and COPYING.GPLv2 located in the application directory." TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>       
                 </StackPanel>
             </ScrollViewer>
         </TabItem>

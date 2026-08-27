@@ -11,16 +11,14 @@ A high-performance, cross-platform desktop video transcoding and compression app
 
 ---
 
-## Download & Quick Start (Standalone Release)
-
-### Latest Release: `VideoConverter_v2.0` (Windows x86_64)
+## Download & Quick Start
 
 Pre-built standalone single-file executables are available for Windows x64 users under **[Releases](https://github.com/house40105/VideoConverter/releases)**.
 
 #### Quick Start Instructions:
-1. **Download & Extract Release**: Download `VideoConverter_win64_v2.0.zip` from the [GitHub Releases](https://github.com/house40105/VideoConverter/releases) page and extract it.
-2. **FFmpeg Integration**: `ffmpeg.exe` is bundled directly with the release package. Ensure `ffmpeg.exe` remains in the **same directory** as `VideoConverter_win64_v2.0.exe`.
-3. **Run Application**: Double-click `VideoConverter_win64_v2.0.exe` to start converting videos immediately.
+1. **Download** `VideoConverter_{platform}_{version}.zip` from the [GitHub Releases](https://github.com/house40105/VideoConverter/releases) page and extract it.
+2. **FFmpeg Integration**: `ffmpeg.exe` is bundled directly with the release package. Ensure `ffmpeg.exe` remains in the **same directory** as `VideoConverter_{platform}_{version}.exe`.
+3. **Run Application**: Double-click `VideoConverter_{platform}_{version}.exe` to start converting videos immediately.
    > **Note:** The standalone Windows build is fully self-contained. Installing the .NET Runtime is **not** required.
 
 ---
